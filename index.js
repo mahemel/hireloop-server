@@ -30,7 +30,8 @@ async function run() {
 
         const database = client.db(process.env.DB_NAME);
         const jobsCollection = database.collection("jobs");
-        const companyCollection = database.collection("companyCollection")
+        const companyCollection = database.collection("companyCollection");
+        const applicationCollection = database.collection("applicationCollection");
 
 
         app.post('/api/jobs', async (req, res) => {
@@ -71,6 +72,20 @@ async function run() {
             const result = await jobsCollection.findOne(query);
 
             res.json(result)
+        })
+
+        //application related apis
+        app.post('/api/applications', async (req, res) => {
+            const application = req.body;
+
+            const newApplication = {
+                ...application,
+                createdAt: new Date()
+            }
+
+            const result = await applicationCollection.insertOne(newApplication);
+            res.json(result)
+
         })
 
         app.post('/api/companies', async (req, res) => {
