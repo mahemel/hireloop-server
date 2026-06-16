@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
 
         const database = client.db("hireloop_db");
@@ -146,13 +146,18 @@ async function run() {
                 query.status = req.query.status;
             }
 
-            //company
-            if (req.query.companyId) {
-                query.companyId = req.query.companyId;
+            // pagination related work
+            if (req.query.page) {
+                const page = req.query.page;
+                const perPage = req.query.perPage || 6;
+                const skipItems = (page - 1) * perPage
+
+                const total = await jobCollection.countDocuments(query);
+                const cursor = jobCollection.find(query).skip(skipItems).limit(perPage);
+                const jobs = await cursor.toArray();
+                return res.send({ total, jobs });
             }
-            if (req.query.status) {
-                query.status = req.query.status;
-            }
+
             const cursor = jobCollection.find(query);
             const result = await cursor.toArray();
             res.send(result);
@@ -342,8 +347,8 @@ async function run() {
         })
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
